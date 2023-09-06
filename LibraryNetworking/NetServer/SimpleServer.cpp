@@ -1,5 +1,6 @@
 #include <iostream>
 #include <olc_net.h>
+#include <library_framework.h>
 
 enum class CustomMsgTypes : uint32_t
 {
@@ -7,6 +8,7 @@ enum class CustomMsgTypes : uint32_t
 	ServerDeny,
 	ServerPing,
 	MessageAll,
+	MessageServer,
 	ServerMessage,
 
 	LoanBook,
@@ -24,174 +26,7 @@ enum class CustomMsgTypes : uint32_t
 	RemoveLibrarian,
 };
 
-class Book {
-public:
-	Book(std::string title, std::string author, std::string genre, std::string isbn, int publicationYear)
-		: title(title), author(author), genre(genre), isbn(isbn), publicationYear(publicationYear), isAvailable(true) {}
 
-	std::string title;
-	std::string author;
-	std::string genre;
-	std::string isbn;
-	int publicationYear;
-	bool isAvailable;
-};
-
-class Member {
-public:
-	Member(std::string name, std::string memberID)
-		: name(name), memberID(memberID) {}
-
-	std::string name;
-	std::string memberID;
-	std::vector<Book*> loanedBooks;
-};
-
-class Librarian {
-public:
-	Librarian(std::string name, std::string librarianID)
-		: name(name), librarianID(librarianID) {}
-
-	std::string name;
-	std::string librarianID;
-	std::vector<Book*> booksAdded;
-	std::vector<Book*> booksRemoved;
-};
-
-class Library {
-public:
-	void addBook(const Book& book) {
-		books.push_back(book);
-	}
-
-	void removeBook(const std::string& isbn) {
-		for (auto it = books.begin(); it != books.end(); it++) {
-			if (it->isbn == isbn) {
-				books.erase(it);
-				return;
-			}
-		}
-	}
-
-	std::string getBookInfo(const std::string& isbn) {
-		for (const auto& book : books) {
-			if (book.isbn == isbn) {
-				std::stringstream ss;
-				ss << book.title << " by " << book.author << " (ISBN: " << book.isbn << ")";
-				ss << (book.isAvailable ? " - Available\n" : " - Not Available\n");
-				return ss.str();
-			}
-		}
-		return "Book not found.\n";
-	}
-
-	void loanBookToMember(const std::string& isbn, const std::string& memberID) {
-		for (auto& book : books) {
-			if (book.isbn == isbn && book.isAvailable) {
-				for (auto& member : members) {
-					if (member.memberID == memberID) {
-						member.loanedBooks.push_back(&book);
-						book.isAvailable = false;
-						return;
-					}
-				}
-			}
-		}
-	}
-
-	void returnBookFromMember(const std::string& isbn, const std::string& memberID) {
-		for (auto& member : members) {
-			if (member.memberID == memberID) {
-				for (auto it = member.loanedBooks.begin(); it != member.loanedBooks.end(); it++) {
-					if ((*it)->isbn == isbn) {
-						(*it)->isAvailable = true;
-						member.loanedBooks.erase(it);
-						return;
-					}
-				}
-			}
-		}
-	}
-
-	bool isBookAvailable(const std::string& isbn) {
-		for (const auto& book : books) {
-			if (book.isbn == isbn) {
-				return book.isAvailable;
-			}
-		}
-		return false;
-	}
-
-	void addMember(const std::string& name, const std::string& memberID) {
-		members.emplace_back(name, memberID);
-	}
-
-	void removeMember(const std::string& memberID) {
-		for (auto it = members.begin(); it != members.end(); it++) {
-			if (it->memberID == memberID) {
-				members.erase(it);
-				return;
-			}
-		}
-	}
-
-	void addLibrarian(const std::string& name, const std::string& librarianID) {
-		librarians.emplace_back(name, librarianID);
-	}
-
-	void removeLibrarian(const std::string& librarianID) {
-		for (auto it = librarians.begin(); it != librarians.end(); it++) {
-			if (it->librarianID == librarianID) {
-				librarians.erase(it);
-				return;
-			}
-		}
-	}
-
-	std::string listAllBooks() {
-		if (books.empty()) {
-			return "No books available in the library. Please add books.\n";
-		}
-
-		std::stringstream ss;  // Create StringStream object. Used to manipulate strings.
-		for (const auto& book : books) {
-			ss << book.title << " by " << book.author << " (ISBN: " << book.isbn << ")";  // Concatenate strings into ss.
-			ss << (book.isAvailable ? " - Available\n" : " - Not Available\n");  // Concatenate more, either available or not.
-		}
-		return ss.str();
-	}
-
-	std::string listAllMembers() {
-		if (members.empty()) {
-			return "No members registered in the library. Please add members.\n";
-		}
-
-		std::stringstream ss;
-		for (const auto& member : members) {
-			ss << member.name << " (ID: " << member.memberID << ")\n";  // Concatenate a string with all members including newlines.
-		}
-		return ss.str();
-	}
-
-	std::string listAllLibrarians() {
-		if (librarians.empty()) {
-			return "No librarians registered in the library. Please add librarians.\n";
-		}
-
-		std::stringstream ss;
-		for (const auto& librarian : librarians) {
-			ss << librarian.name << " (ID: " << librarian.librarianID << ")\n";
-		}
-		return ss.str();
-	}
-
-
-
-private:
-	std::vector<Book> books;
-	std::vector<Member> members;
-	std::vector<Librarian> librarians;
-};
 
 class CustomServer : public olc::net::server_interface<CustomMsgTypes>
 {
@@ -200,6 +35,8 @@ public:
 	{
 
 	}
+
+	Library myLibrary;
 
 protected:
 	bool OnClientConnect(std::shared_ptr<olc::net::connection<CustomMsgTypes>> client) override
@@ -221,9 +58,81 @@ protected:
 	{
 		switch (msg.header.id)
 		{
+		case CustomMsgTypes::MessageServer:
+		{
+			std::string output;
+			char c;
+			while (msg.body.size() > 0) {
+				msg >> c;
+				output = c + output;  // Prepend the character to the string
+			}
+			std::cout << "[Client " << client->GetID() << " message]: " << output << '\n';
+		}
+		break;
+
+		case CustomMsgTypes::AddBook:
+		{
+			std::string output;
+			char c;
+			while (msg.body.size() > 0) {  // While body is not empty this loop will construct a string from all the characters in it.
+				msg >> c;
+				output = c + output;  // Prepend the character to the string
+			}
+			std::stringstream ss(output);  // Move string into stringstream.
+		    std::string title, author, genre, isbn, publicationYearString;
+			int publicationYear;
+			std::string response;  // This is the string we will send back to the client.
+
+			if (getline(ss, title, ';') && getline(ss, author, ';') && getline(ss, genre, ';') &&
+				getline(ss, isbn, ';') && getline(ss, publicationYearString) && (std::istringstream(publicationYearString) >> publicationYear))  // If reading was successful.
+			{
+				myLibrary.addBook(Book(title, author, genre, isbn, publicationYear));  // Add the book to the library, into the vector of books.
+				std::cout << "[" << client->GetID() << "]: Add book: " << output << '\n';
+				response = "Book was added.";
+			}
+			else  // If reading was not successful.
+			{
+				response = "Book couldn't be added.\n";
+				std::cout << "Wrong format for ADD BOOK command." << "[" << client->GetID() << "]: " << output << ".\n";
+			}
+			std::vector vec(response.begin(), response.end());  // Vector of characters from the string response.
+			olc::net::message<CustomMsgTypes> newMsg;
+			newMsg.header.id = CustomMsgTypes::ServerMessage;
+			for (int i = 0; i < vec.size(); ++i)  // This loop will add all the characters from the vector into the newMsg to send back to the client.
+			{
+				newMsg << vec[i];
+			}
+			client->Send(newMsg);  // Send the new msg.
+		}
+		break;
+
+		case CustomMsgTypes::ListBooks:
+		{
+			std::cout << "[" << client->GetID() << "]: List books.\n";
+			std::string response = myLibrary.listAllBooks();
+			if (response.empty())  // If the list of books are empty or there was an issue, then the response will be to inform the client of that.
+			{
+				response = "Either there was an issue listing the books or the list is empty.\n";
+				std::cout << response;
+			}
+			else
+			{
+				std::cout << "Sending list of books to client.\n";
+			}
+			std::vector<char> vec(response.begin(), response.end());  // Vector of characters of the string with the list of books.
+			olc::net::message<CustomMsgTypes> newMsg; // Construct new message
+			newMsg.header.id = CustomMsgTypes::ServerMessage;
+			for (int i = 0; i < vec.size(); ++i)  // Put the characters into the message body.
+			{
+				newMsg << vec[i];
+			}
+			client->Send(newMsg);
+		}
+		break;
+
 		case CustomMsgTypes::ServerPing:
 		{
-			std::cout << "[" << client->GetID() << "]: Server Ping\n";
+			std::cout << "[" << client->GetID() << "]: Server Ping.\n";
 
 			// Simply bounce message back to client
 			client->Send(msg);
@@ -232,39 +141,28 @@ protected:
 
 		case CustomMsgTypes::MessageAll:
 		{
-			std::cout << "[" << client->GetID() << "]: Message All\n";
+			std::cout << "[" << client->GetID() << "]: Message All.\n";
 
 			// Construct a new message and send it to all clients
-			olc::net::message<CustomMsgTypes> msg;
-			msg.header.id = CustomMsgTypes::ServerMessage;
-			msg << client->GetID();
-			MessageAllClients(msg, client);
+			olc::net::message<CustomMsgTypes> newMsg;
+			newMsg.header.id = CustomMsgTypes::ServerMessage;
+			newMsg << client->GetID();
+			MessageAllClients(newMsg, client);
 
 		}
 		break;
-
-		case CustomMsgTypes::AddBook:
-		{
-			std::cout << "[" << client->GetID() << "]: Added book\n";
-
-
-		}
 		}
 	}
 };
-
 
 int main()
 {
 	CustomServer server(60000);
 	server.Start();
-
+	Library myLibrary;
 	while (1)
 	{
 		server.Update(-1, true);
 	}
-
-
-
 	return 0;
 }
