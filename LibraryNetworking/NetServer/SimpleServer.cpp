@@ -11,6 +11,8 @@ enum class CustomMsgTypes : uint32_t
 	MessageServer,
 	ServerMessage,
 
+	Login,
+
 	LoanBook,
 	ReturnBook,
 	AddBook,
@@ -25,8 +27,6 @@ enum class CustomMsgTypes : uint32_t
 	AddLibrarian,
 	RemoveLibrarian,
 };
-
-
 
 class CustomServer : public olc::net::server_interface<CustomMsgTypes>
 {
@@ -56,8 +56,113 @@ protected:
 	// Called when a message arrives
 	void OnMessage(std::shared_ptr<olc::net::connection<CustomMsgTypes>> client, olc::net::message<CustomMsgTypes>& msg) override
 	{
+		// Different behaviour on different message types.
 		switch (msg.header.id)
 		{
+		// Client tries to login. Server must check and respond, to give access or not.
+		case CustomMsgTypes::Login:
+		{
+			std::string output;
+			std::string response = "Denial";
+			char c;
+			while (msg.body.size() > 0) {
+				msg >> c;
+				output = c + output;  // Prepend the character to the string
+			}
+			std::string username, password;
+			std::stringstream ss(output);
+			getline(ss, username, ';');
+			getline(ss, password, ';');
+
+			// Iterate through member list to find match.
+			for (int i = 0; i < myLibrary.members.size(); ++i) {
+				std::cout << i << '\n';
+				if (myLibrary.members[i].username == username && myLibrary.members[i].password == password) {
+					response = "Approval";
+				}
+			}
+			// Iterate through librarian list to find match.
+			for (int i = 0; i < myLibrary.librarians.size(); ++i) {
+				std::cout << i << '\n';
+				if (myLibrary.librarians[i].username == username && myLibrary.librarians[i].password == password) {
+					response = "Approval";
+					client->setClientType(olc::net::connection<CustomMsgTypes>::client::librarian);  // Set clientType to librarian if username/password matches one of the librarians.
+				}
+			}
+			// Respond with Approval or Denial of login.
+			std::vector vec(response.begin(), response.end());  // Vector of characters from the string response.
+			olc::net::message<CustomMsgTypes> newMsg;
+			newMsg.header.id = CustomMsgTypes::Login;
+			for (int i = 0; i < vec.size(); ++i)  // This loop will add all the characters from the vector into the newMsg to send back to the client.
+			{
+				newMsg << vec[i];
+			}
+			client->Send(newMsg);  // Send the new msg.
+		}
+		break;
+
+		case CustomMsgTypes::AddMember:
+		{
+			std::string name, memberID, username, password, output, response;
+			if (client->getClientType() == olc::net::connection<CustomMsgTypes>::client::member) {
+				response = "You are not a librarian and therefore cannot add member.\n";
+			}
+			else {
+				char c;
+				while (msg.body.size() > 0) {
+					msg >> c;
+					output = c + output;  // Prepend the character to the string
+				}
+
+				std::stringstream ss(output);
+				if (getline(ss, name, ';') && getline(ss, memberID, ';') && getline(ss, username, ';') && getline(ss, password, ';')) {  // If reading was successful.
+					myLibrary.addMember(name, memberID, username, password);
+					response = "Member was added.\n";
+				}
+				else {
+					response = "Couldn't add member. Check format.\n";
+				}
+			}
+			std::vector vec(response.begin(), response.end());  // Vector of characters from the string response.
+			olc::net::message<CustomMsgTypes> newMsg;
+			newMsg.header.id = CustomMsgTypes::ServerMessage;
+			for (int i = 0; i < vec.size(); ++i)  // This loop will add all the characters from the vector into the newMsg to send back to the client.
+			{
+				newMsg << vec[i];
+			}
+			client->Send(newMsg);  // Send the new msg.
+		}
+
+		case CustomMsgTypes::ListMembers:
+		{
+			std::string response;
+			if (client->getClientType() == olc::net::connection<CustomMsgTypes>::client::member) // If you are a member, you cannot do this.
+			{
+				response = "You are not a librarian, and therefore cannot list members.\n";
+			}
+			else                                                                                // Else if you are a librarian, you can do this.
+			{
+				std::cout << "[" << client->GetID() << "]: List members.\n";
+				response = myLibrary.listAllMembers();
+				if (response.empty())  // If the list of members are empty or there was an issue, then the response will be to inform the client of that.
+				{
+					response = "Either there was an issue listing the members or the list is empty.\n";
+				}
+				else
+				{
+					std::cout << "Sending list of members to client.\n";
+				}
+			}
+			std::vector<char> vec(response.begin(), response.end());  // Vector of characters of the string with the list of members.
+			olc::net::message<CustomMsgTypes> newMsg; // Construct new message
+			newMsg.header.id = CustomMsgTypes::ServerMessage;
+			for (int i = 0; i < vec.size(); ++i)  // Put the characters into the message body.
+			{
+				newMsg << vec[i];
+			}
+			client->Send(newMsg);
+		}
+
 		case CustomMsgTypes::MessageServer:
 		{
 			std::string output;
@@ -71,30 +176,38 @@ protected:
 		break;
 
 		case CustomMsgTypes::AddBook:
-		{
-			std::string output;
-			char c;
-			while (msg.body.size() > 0) {  // While body is not empty this loop will construct a string from all the characters in it.
-				msg >> c;
-				output = c + output;  // Prepend the character to the string
-			}
-			std::stringstream ss(output);  // Move string into stringstream.
-		    std::string title, author, genre, isbn, publicationYearString;
-			int publicationYear;
+		{	
 			std::string response;  // This is the string we will send back to the client.
 
-			if (getline(ss, title, ';') && getline(ss, author, ';') && getline(ss, genre, ';') &&
-				getline(ss, isbn, ';') && getline(ss, publicationYearString) && (std::istringstream(publicationYearString) >> publicationYear))  // If reading was successful.
-			{
-				myLibrary.addBook(Book(title, author, genre, isbn, publicationYear));  // Add the book to the library, into the vector of books.
-				std::cout << "[" << client->GetID() << "]: Add book: " << output << '\n';
-				response = "Book was added.";
+			if (client->getClientType() == olc::net::connection<CustomMsgTypes>::client::member) {
+				response = "You are not a librarian and therefore cannot add book.\n";
 			}
-			else  // If reading was not successful.
-			{
-				response = "Book couldn't be added.\n";
-				std::cout << "Wrong format for ADD BOOK command." << "[" << client->GetID() << "]: " << output << ".\n";
+			else {
+				std::string output;
+				char c;
+				while (msg.body.size() > 0) {  // While body is not empty this loop will construct a string from all the characters in it.
+					msg >> c;
+					output = c + output;  // Prepend the character to the string
+				}
+				std::stringstream ss(output);  // Move string into stringstream.
+				std::string title, author, genre, isbn, publicationYearString;
+				int publicationYear;
+
+				if (getline(ss, title, ';') && getline(ss, author, ';') && getline(ss, genre, ';') &&
+					getline(ss, isbn, ';') && getline(ss, publicationYearString) && (std::istringstream(publicationYearString) >> publicationYear))  // If reading was successful.
+				{
+					myLibrary.addBook(Book(title, author, genre, isbn, publicationYear));  // Add the book to the library, into the vector of books.
+					std::cout << "[" << client->GetID() << "]: Add book: " << output << '\n';
+					response = "Book was added.";
+				}
+				else  // If reading was not successful.
+				{
+					response = "Book couldn't be added.\n";
+					std::cout << "Wrong format for ADD BOOK command." << "[" << client->GetID() << "]: " << output << ".\n";
+				}
 			}
+
+
 			std::vector vec(response.begin(), response.end());  // Vector of characters from the string response.
 			olc::net::message<CustomMsgTypes> newMsg;
 			newMsg.header.id = CustomMsgTypes::ServerMessage;
@@ -159,7 +272,8 @@ int main()
 {
 	CustomServer server(60000);
 	server.Start();
-	Library myLibrary;
+	server.myLibrary.addMember("Kevin Johansen", "1", "legendo", "hunter123");
+	server.myLibrary.addLibrarian("Jonathan Krogstad", "2", "samba", "leker321");
 	while (1)
 	{
 		server.Update(-1, true);

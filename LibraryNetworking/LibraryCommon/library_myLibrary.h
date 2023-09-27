@@ -70,8 +70,8 @@ public:
 		return ss.str();
 	}
 
-	void addMember(const std::string& name, const std::string& memberID) {
-		members.emplace_back(name, memberID);
+	void addMember(const std::string& name, const std::string& memberID, const std::string& username, const std::string& password) {
+		members.emplace_back(name, memberID, username, password);
 	}
 
 	void removeMember(const std::string& memberID) {
@@ -123,8 +123,8 @@ public:
 		return ss.str();
 	}
 
-	void addLibrarian(const std::string& name, const std::string& librarianID) {
-		librarians.emplace_back(name, librarianID);
+	void addLibrarian(const std::string& name, const std::string& librarianID, const std::string& username, const std::string& password) {
+		librarians.emplace_back(name, librarianID, username, password);
 	}
 
 	void removeLibrarian(const std::string& librarianID) {

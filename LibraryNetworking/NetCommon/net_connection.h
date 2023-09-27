@@ -25,6 +25,13 @@ namespace olc
 				client
 			};
 
+			// For the server to check if you are librarian or member. Different permissions apply.
+			enum class client
+			{
+				librarian,
+				member
+			};
+
 		public:
 			// Constructor: Specify Owner, connect to context, transfer the socket
 			//				Provide reference to incoming message queue
@@ -118,6 +125,21 @@ namespace olc
 			{
 
 			}
+
+
+			client getClientType() const {
+				return clientType;
+			}
+
+			void setClientType(client type) {
+				if (type == olc::net::connection<T>::client::librarian) {
+					clientType = client::librarian;
+				}
+				else {
+					clientType = client::member;
+				}
+			}
+
 
 		public:
 			// ASYNC - Send a message, connections are one-to-one so no need to specifiy
@@ -395,6 +417,8 @@ namespace olc
 
 			// The "owner" decides how some of the connection behaves
 			owner m_nOwnerType = owner::server;
+
+			client clientType = client::member;  // For the server to decide on login if client username/password matches with a librarian it will change it to librarian.
 
 			uint32_t id = 0;
 

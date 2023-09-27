@@ -15,5 +15,4 @@ public:
 	int publicationYear;
 	bool isAvailable;
 
-
 	};

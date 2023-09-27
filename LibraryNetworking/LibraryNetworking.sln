@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.6.33815.320
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.34031.81
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NetClient", "NetClient\NetClient.vcxproj", "{362A9DDB-FD35-4CDB-B7CA-C397B25B3FD9}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -20,6 +20,11 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LibraryCommon", "LibraryCommon\LibraryCommon.vcxproj", "{5812CC02-4C5A-4FFC-AFC0-00FE8B17BB9F}"
 	ProjectSection(ProjectDependencies) = postProject
 		{E4020D67-43C1-4980-A873-266132FA601E} = {E4020D67-43C1-4980-A873-266132FA601E}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QtLibGUI", "QtLibGUI\QtLibGUI.vcxproj", "{00BB074A-EA12-4A41-AA0B-51877F75DE44}"
+	ProjectSection(ProjectDependencies) = postProject
+		{362A9DDB-FD35-4CDB-B7CA-C397B25B3FD9} = {362A9DDB-FD35-4CDB-B7CA-C397B25B3FD9}
 	EndProjectSection
 EndProject
 Global
@@ -62,6 +67,12 @@ Global
 		{5812CC02-4C5A-4FFC-AFC0-00FE8B17BB9F}.Release|x64.Build.0 = Release|x64
 		{5812CC02-4C5A-4FFC-AFC0-00FE8B17BB9F}.Release|x86.ActiveCfg = Release|Win32
 		{5812CC02-4C5A-4FFC-AFC0-00FE8B17BB9F}.Release|x86.Build.0 = Release|Win32
+		{00BB074A-EA12-4A41-AA0B-51877F75DE44}.Debug|x64.ActiveCfg = Debug|x64
+		{00BB074A-EA12-4A41-AA0B-51877F75DE44}.Debug|x64.Build.0 = Debug|x64
+		{00BB074A-EA12-4A41-AA0B-51877F75DE44}.Debug|x86.ActiveCfg = Debug|x64
+		{00BB074A-EA12-4A41-AA0B-51877F75DE44}.Release|x64.ActiveCfg = Release|x64
+		{00BB074A-EA12-4A41-AA0B-51877F75DE44}.Release|x64.Build.0 = Release|x64
+		{00BB074A-EA12-4A41-AA0B-51877F75DE44}.Release|x86.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
