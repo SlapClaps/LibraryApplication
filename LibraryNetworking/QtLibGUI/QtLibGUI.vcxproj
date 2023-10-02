@@ -61,11 +61,23 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);..\NetCommon;C:\Users\kevin\Documents\C++ libraries\asio-1.28.0\include;</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);..\NetCommon;C:\Users\kevin\Documents\C++ libraries\asio-1.28.0\include;C:\Users\kevin\Documents\C++ libraries\OpenSSL-Win64\include;</IncludePath>
+    <LibraryPath>C:\Users\kevin\Documents\C++ libraries\OpenSSL-Win64\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);..\NetCommon;C:\Users\kevin\Documents\C++ libraries\asio-1.28.0\include;</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);..\NetCommon;C:\Users\kevin\Documents\C++ libraries\asio-1.28.0\include;C:\Users\kevin\Documents\C++ libraries\OpenSSL-Win64\include;</IncludePath>
+    <LibraryPath>C:\Users\kevin\Documents\C++ libraries\OpenSSL-Win64\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Link>
+      <AdditionalDependencies>libssl.lib;libcrypto.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Link>
+      <AdditionalDependencies>libssl.lib;libcrypto.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
     <ClCompile>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>

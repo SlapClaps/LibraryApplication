@@ -192,4 +192,15 @@ public:
 		return response;
 	}
 
+	std::string getToken() {
+		return sessionToken;
+	}
+
+	void setToken(std::string token) {
+		sessionToken = token;
+	}
+
+private:
+	std::string sessionToken;
+
 };
