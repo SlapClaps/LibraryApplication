@@ -142,6 +142,15 @@ namespace olc
 
 
 		public:
+
+			std::string getToken() {
+				return sessionToken;
+			}
+
+			void setToken(std::string token) {
+				sessionToken = token;
+			}
+
 			// ASYNC - Send a message, connections are one-to-one so no need to specifiy
 			// the target, for a client, the target is the server and vice versa
 			void Send(const message<T>& msg)
@@ -426,6 +435,8 @@ namespace olc
 			uint64_t m_nHandshakeOut = 0;
 			uint64_t m_nHandshakeIn = 0;
 			uint64_t m_nHandshakeCheck = 0;
+
+			std::string sessionToken;  // To handle login sessions.
 
 		};
 	}

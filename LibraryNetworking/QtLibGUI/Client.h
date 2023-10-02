@@ -143,7 +143,8 @@ public:
 	// For the login response
 	std::string waitForResponse(CustomClient& c)
 	{
-		std::string output;
+		std::string output, validationMsg, token;  // Output is the whole message. Seperate into validationMsg and token. ';' seperates them.
+
 		int i = 0;
 		while (i < 5)
 		{
@@ -158,12 +159,18 @@ public:
 					while (msg.body.size() > 0)
 					{
 						msg >> ch;
-						output = ch + output;  // Prepend the character to the string
+						output = ch + output;  // Prepend the character to the string.
 					}
 					std::cout << "[Server message]: " << output << "\n";
-					if (output == "Approval")  // If server sends an approval to client.
+
+					std::stringstream ss(output);
+					std::getline(ss, validationMsg, ';');
+					std::getline(ss, token);
+
+					if (validationMsg == "Approval")  // If server sends an approval to client.
 					{
 						c.isLoggedIn = true;
+						c.sessionToken = token;
 						i = 5;
 					}
 				}
@@ -190,14 +197,6 @@ public:
 			}
 		}
 		return response;
-	}
-
-	std::string getToken() {
-		return sessionToken;
-	}
-
-	void setToken(std::string token) {
-		sessionToken = token;
 	}
 
 private:

@@ -67,7 +67,8 @@ protected:
 			bool foundInMembers = false; // Flag to determine if a match is found in the members list. This is to avoid double match.
 			bool foundAny = false;       // If any match is found in any list.
 			std::string output;
-			std::string response = "Denial";  // Keep it like this if no match found.
+			std::string response = "Denial;";  // Keep it like this if no match found.
+			std::string token;
 			char c;
 			while (msg.body.size() > 0) {
 				msg >> c;
@@ -95,12 +96,21 @@ protected:
 				}
 			}
 			if (foundAny == true) {
-				response = "Approval";
 				// Generate random token with OpenSSL. Not encryption, but a cryptographic-quality random number.
 				unsigned char buffer[16]; // 128 bits
 				RAND_bytes(buffer, sizeof(buffer));
-				std::string token(reinterpret_cast<char*>(buffer), sizeof(buffer));
-				client.setToken();
+				//token.assign(reinterpret_cast<char*>(buffer), sizeof(buffer));
+				std::stringstream ss;
+				ss << std::hex << std::setfill('0');
+				for (int i = 0; i < sizeof(buffer); ++i) {
+					ss << std::setw(2) << static_cast<unsigned int>(buffer[i]);
+				}
+				token = ss.str();
+
+				client->setToken(token);
+				active_sessions[token] = client.get();
+				response = "Approval;" + token + ';';
+				std::cout << response << std::endl;  // For debugging.
 			}
 
 			// Respond with Approval or Denial of login.
