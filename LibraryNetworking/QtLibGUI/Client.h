@@ -64,7 +64,8 @@ public:
 	{
 		olc::net::message<CustomMsgTypes> msg;
 		msg.header.id = CustomMsgTypes::MessageServer;
-		std::vector<char> vec(stringMsg.begin(), stringMsg.end());
+		std::string msgToSend = sessionToken + ';' + stringMsg;
+		std::vector<char> vec(msgToSend.begin(), msgToSend.end());
 		for (int i = 0; i < vec.size(); ++i)
 		{
 			msg << vec[i];
@@ -76,7 +77,8 @@ public:
 	{
 		olc::net::message<CustomMsgTypes> msg;
 		msg.header.id = CustomMsgTypes::AddBook;
-		std::vector<char> vec(stringMsg.begin(), stringMsg.end());
+		std::string msgToSend = sessionToken + ';' + stringMsg;
+		std::vector<char> vec(msgToSend.begin(), msgToSend.end());
 		for (int i = 0; i < vec.size(); ++i)
 		{
 			msg << vec[i];
@@ -88,7 +90,8 @@ public:
 	{
 		olc::net::message<CustomMsgTypes> msg;
 		msg.header.id = CustomMsgTypes::AddMember;
-		std::vector<char> vec(stringMsg.begin(), stringMsg.end());
+		std::string msgToSend = sessionToken + ';' + stringMsg;
+		std::vector<char> vec(msgToSend.begin(), msgToSend.end());
 		for (int i = 0; i < vec.size(); ++i)
 		{
 			msg << vec[i];
@@ -100,6 +103,12 @@ public:
 	{
 		olc::net::message<CustomMsgTypes> msg;
 		msg.header.id = CustomMsgTypes::ListBooks;
+		std::string msgToSend = sessionToken + ';';
+		std::vector<char> vec(msgToSend.begin(), msgToSend.end());
+		for (int i = 0; i < vec.size(); ++i)
+		{
+			msg << vec[i];
+		}
 		Send(msg);
 	}
 
@@ -107,6 +116,12 @@ public:
 	{
 		olc::net::message<CustomMsgTypes> msg;
 		msg.header.id = CustomMsgTypes::ListMembers;
+		std::string msgToSend = sessionToken + ';';
+		std::vector<char> vec(msgToSend.begin(), msgToSend.end());
+		for (int i = 0; i < vec.size(); ++i)
+		{
+			msg << vec[i];
+		}
 		Send(msg);
 	}
 
