@@ -164,9 +164,9 @@ protected:
 				return;  // Token didn't match so don't handle any request other than login. Exit this function.
 
 			}
-			else {
-				
-
+			else {  // Token was valid so handle any requests received from client.
+				// The previous Stringstream: "ss", is now empty because we seperated token and requestData.
+				std::stringstream requestDataStream(requestData); // Make a new stringstream to extract from.
 				switch (msg.header.id)
 				{
 				case CustomMsgTypes::AddMember:
@@ -176,7 +176,8 @@ protected:
 						response = "You are not a librarian and therefore cannot add member.\n";
 					}
 					else {
-						if (getline(ss, name, ';') && getline(ss, memberID, ';') && getline(ss, username, ';') && getline(ss, password, ';')) {  // If reading was successful.
+						if (getline(requestDataStream, name, ';') && getline(requestDataStream, memberID, ';') &&
+							getline(requestDataStream, username, ';') && getline(requestDataStream, password, ';')) {  // If reading was successful.
 							myLibrary.addMember(name, memberID, username, password);
 							response = "Member was added.\n";
 						}
@@ -238,8 +239,10 @@ protected:
 						std::string title, author, genre, isbn, publicationYearString;
 						int publicationYear;
 
-						if (getline(ss, title, ';') && getline(ss, author, ';') && getline(ss, genre, ';') &&
-							getline(ss, isbn, ';') && getline(ss, publicationYearString) && (std::istringstream(publicationYearString) >> publicationYear))  // If reading was successful.
+						if (getline(requestDataStream, title, ';') && getline(requestDataStream, author, ';') && 
+							getline(requestDataStream, genre, ';') && getline(requestDataStream, isbn, ';') && 
+							getline(requestDataStream, publicationYearString) && 
+							(std::istringstream(publicationYearString) >> publicationYear))  // If reading was successful.
 						{
 							myLibrary.addBook(Book(title, author, genre, isbn, publicationYear));  // Add the book to the library, into the vector of books.
 							std::cout << "[" << client->GetID() << "]: Add book: " << requestData << '\n';

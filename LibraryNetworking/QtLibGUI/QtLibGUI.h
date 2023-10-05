@@ -13,20 +13,13 @@ class QtLibGUI : public QMainWindow       // Your main window class derived from
 
 
 public:
-    QtLibGUI(QWidget* parent = nullptr);  // Constructor. Takes an optional parent widget.
+    QtLibGUI(CustomClient* client, QWidget* parent = nullptr);  // Constructor. Takes an optional parent widget.
     ~QtLibGUI();                          // Destructor.
 
 private:
     Ui::QtLibGUIClass ui;                 // An instance of the UI class. This provides access to all the widgets you design in the .ui file.
 
-    CustomClient myClient;
-
     void onAddBookButtonClicked();
-    void onStartupConnect();
-    void onConnect();
-    void onDisconnect();
-    void checkConnectionStatus();
-    void onLogin();
     void onSendMessage();
     void onGetMessage();
     void onListBooks();
@@ -35,7 +28,6 @@ private:
 
     //QTimer connectionTimer;
     QTimer getMsgTimer;
-    bool prevConnectionStatus;
-    bool isLoggedIn;
 
+    CustomClient* myClient;
 };

@@ -104,13 +104,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <QtRcc Include="QtLibGUI.qrc" />
+    <QtUic Include="LoginDialog.ui" />
     <QtUic Include="QtLibGUI.ui" />
     <QtMoc Include="QtLibGUI.h" />
+    <ClCompile Include="LoginDialog.cpp" />
     <ClCompile Include="QtLibGUI.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="Client.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="LoginDialog.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

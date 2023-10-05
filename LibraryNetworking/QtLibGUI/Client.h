@@ -156,16 +156,16 @@ public:
 	}
 
 	// For the login response
-	std::string waitForResponse(CustomClient& c)
+	std::string waitForResponse()
 	{
 		std::string output, validationMsg, token;  // Output is the whole message. Seperate into validationMsg and token. ';' seperates them.
 
 		int i = 0;
-		while (i < 5)
+		while (i < 3)
 		{
-			while (!c.Incoming().empty())
+			while (!this->Incoming().empty())
 			{
-				auto msg = c.Incoming().pop_front().msg;  // "Moves" the msg from the queue into a new msg variable to use here.
+				auto msg = this->Incoming().pop_front().msg;  // "Moves" the msg from the queue into a new msg variable to use here.
 
 				if (msg.header.id == CustomMsgTypes::Login)  // Check what type of msg was received.
 				{
@@ -184,13 +184,11 @@ public:
 
 					if (validationMsg == "Approval")  // If server sends an approval to client.
 					{
-						c.isLoggedIn = true;
-						c.sessionToken = token;
-						i = 5;
+						this->isLoggedIn = true;
+						this->sessionToken = token;
+						i = 3;
+						return output;
 					}
-				}
-				if (c.Incoming().empty()) {
-					return output;
 				}
 			}
 			++i;
@@ -200,10 +198,10 @@ public:
 	}
 
 	// For any message, but doesn't check what kind of message.
-	std::string getMessage(CustomClient& c) {
+	std::string getMessage() {
 		std::string response;
-		if (!c.Incoming().empty()) {
-			auto msg = c.Incoming().pop_front().msg;
+		if (!this->Incoming().empty()) {
+			auto msg = this->Incoming().pop_front().msg;
 			char ch;
 			while (msg.body.size() > 0)
 			{
